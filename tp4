@@ -1,0 +1,198 @@
+# tp4-api-contract.md
+# TP4: Kontrak API dan TypeScript (Task Management)
+
+Dokumen ini mendefinisikan kesepakatan kontrak antara Rails API (Backend) dan Next.js (Frontend) untuk entitas **Task**.
+
+---
+
+## 1. User Stories & Endpoint Mapping
+
+### User Story 1: Melihat Daftar Tugas (List Tasks)
+* **Deskripsi**: Pengguna ingin melihat seluruh daftar tugas yang tersimpan.
+* **Endpoint**: `GET /api/v1/tasks`
+* **Method**: `GET`
+* **Query Parameters**: 
+  * `completed` (boolean, opsional): Filter berdasarkan status tugas.
+* **Status Response Berhasil**: `200 OK`
+* **Status Response Gagal**: `400 Bad Request` / `422 Unprocessable Entity`
+
+### User Story 2: Membuat Tugas Baru (Create Task)
+* **Deskripsi**: Pengguna ingin menambahkan tugas baru ke dalam sistem.
+* **Endpoint**: `POST /api/v1/tasks`
+* **Method**: `POST`
+* **Request Body (JSON)**:
+  ```json
+  {
+    "task": {
+      "title": "Belajar Rails 8",
+      "description": "Menyelesaikan modul fondasi API",
+      "completed": false
+    }
+  }
+
+  {
+  "data": [
+    {
+      "id": 1,
+      "title": "Menyusun Dokumentasi TP4",
+      "description": "Membuat file markdown dan openapi yaml",
+      "completed": false,
+      "created_at": "2026-11-07T00:00:00.000Z",
+      "updated_at": "2026-11-07T00:00:00.000Z"
+    }
+  ]
+
+
+export interface Task {
+  id: number;
+  title: string;
+  description: string | null; // Nullable dari database
+  completed: boolean;
+  created_at: string; // Dikirim sebagai ISO string
+  updated_at: string;
+}
+
+export interface ApiResponse<T> {
+  data: T;
+  meta?: {
+    page: number;
+    totalPages: number;
+  };
+}
+
+export type ApiError = {
+  error: {
+    code: string;
+    message: string;
+    fields?: Record<string, string[]>;
+  };
+};
+
+
+# openapi.yaml
+openapi: 3.2.1
+info:
+  title: Task Management API
+  version: 1.0.0
+  description: Dokumentasi kontrak API untuk komunikasi Rails backend dan Next.js frontend.
+servers:
+  - url: http://localhost:3000/api/v1
+paths:
+  /tasks:
+    get:
+      summary: Mendapatkan daftar task
+      parameters:
+        - in: query
+          name: completed
+          schema:
+            type: boolean
+          required: false
+          description: Filter task berdasarkan status penyelesaian
+      responses:
+        '200':
+          description: Berhasil mengambil daftar task
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+        '400':
+          description: Parameter atau permintaan tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    post:
+      summary: Membuat task baru
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [task]
+              properties:
+                task:
+                  $ref: '#/components/schemas/TaskInput'
+      responses:
+        '201':
+          description: Berhasil membuat task baru
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '422':
+          description: Unprocessable Entity / Validasi gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+components:
+  schemas:
+    Task:
+      type: object
+      required: [id, title, completed, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Belajar Rails 8
+        description:
+          type: string
+          nullable: true
+          example: Menyelesaikan modul fondasi API
+        completed:
+          type: boolean
+          example: false
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TaskInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        completed:
+          type: boolean
+
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Gagal menyimpan data task
+            fields:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
