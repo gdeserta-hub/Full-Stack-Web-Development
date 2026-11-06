@@ -1,0 +1,81 @@
+backend/app/models/room.rb
+class Room < ApplicationRecord
+  validates :name, presence: true
+  validates :capacity, numericality: { only_integer: true, greater_than: 0 }
+end
+
+application_controller.rb
+class ApplicationController < ActionController::API
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
+
+  private
+
+  def render_not_found(error)
+    render json: {
+      error: { code: "NOT_FOUND", message: "Resource tidak ditemukan" }
+    }, status: :not_found
+  end
+end
+
+rooms_controller.rb
+module Api
+  module V1
+    class RoomsController < ApplicationController
+      before_action :set_room, only: %i[show update]
+
+      def index
+        render json: { data: Room.order(:name) }, status: :ok
+      end
+
+      def show
+        render json: { data: @room }, status: :ok
+      end
+
+      def create
+        room = Room.new(room_params)
+        if room.save
+          render json: { data: room }, status: :created
+        else
+          render_validation_error(room)
+        end
+      end
+
+      def update
+        if @room.update(room_params)
+          render json: { data: @room }, status: :ok
+        else
+          render_validation_error(room)
+        end
+      end
+
+      private
+
+      def set_room
+        @room = Room.find(params[:id])
+      end
+
+      def room_params
+        params.expect(room: %i[name capacity available description])
+      end
+
+      def render_validation_error(record)
+        render json: {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Data tidak valid",
+            fields: record.errors.to_hash
+          }
+        }, status: :unprocessable_entity
+      end
+    end
+  end
+end
+
+routes.rb
+Rails.application.routes.draw do
+  namespace :api do
+    namespace :v1 do
+      resources :rooms, only: %i[index show create update]
+    end
+  end
+end
