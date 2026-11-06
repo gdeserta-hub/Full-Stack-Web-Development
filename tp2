@@ -1,0 +1,61 @@
+# TP2 — Kebutuhan, User Story, dan Struktur Proyek
+
+## 1. Analisis Masalah dan Kebutuhan Pengguna
+- **Aktor:** Mahasiswa
+- **Masalah:** Kesulitan mengetahui ketersediaan ruang kuliah/laboratorium secara real-time tanpa harus datang langsung ke gedung administrasi.
+- **Kebutuhan:** Memfilter daftar ruang berdasarkan tanggal dan kapasitas yang dibutuhkan secara mandiri melalui aplikasi.
+- **Nilai (Manfaat):** Menghemat waktu dan memastikan ketersediaan ruang sebelum mengajukan peminjaman.
+
+---
+
+## 2. User Story
+1. **User Story 1 (Pencarian Ruang):**
+   > Sebagai mahasiswa, saya ingin memfilter ruang berdasarkan tanggal dan kapasitas, sehingga saya dapat memilih ruang yang sesuai sebelum mengajukan peminjaman.
+
+2. **User Story 2 (Pengajuan Peminjaman):**
+   > Sebagai mahasiswa, saya ingin mengajukan peminjaman ruang yang tersedia, sehingga saya mendapatkan kepastian jadwal penggunaan fasilitas kampus.
+
+---
+
+## 3. Acceptance Criteria
+
+### User Story 1: Pencarian Ruang
+- **Kondisi Berhasil:**
+  - **Given** mahasiswa berada pada halaman daftar ruang,
+  - **When** mahasiswa memilih tanggal dan kapasitas lalu menekan tombol "Cari",
+  - **Then** sistem menampilkan daftar ruang yang sesuai dengan kriteria filter.
+- **Kondisi Empty State (Tidak Ada Hasil):**
+  - **Given** mahasiswa berada pada halaman daftar ruang,
+  - **When** mahasiswa memasukkan filter tanggal/kapasitas yang tidak ada ruang memenuhi syarat,
+  - **Then** sistem menampilkan pesan umpan balik (*empty state*) bahwa ruang tidak ditemukan.
+
+### User Story 2: Pengajuan Peminjaman
+- **Kondisi Berhasil:**
+  - **Given** mahasiswa telah memilih ruang yang tersedia pada tanggal tertentu,
+  - **When** mahasiswa mengisi form dan menekan tombol "Ajukan Peminjaman",
+  - **Then** sistem menyimpan pengajuan dan menampilkan konfirmasi bahwa peminjaman berhasil dibuat.
+- **Kondisi Gagal (Konflik Jadwal):**
+  - **Given** mahasiswa memilih ruang dan tanggal yang sudah dipinjam oleh pengguna lain,
+  - **When** mahasiswa menekan tombol "Ajukan Peminjaman",
+  - **Then** sistem menolak pengajuan dan menampilkan pesan error bahwa jadwal berbenturan.
+
+---
+
+## 4. Pemetaan Tanggung Jawab Komponen
+| Komponen | Tanggung Jawab Utama |
+| :--- | :--- |
+| **Next.js App Router** | Menampilkan antarmuka form filter & peminjaman, mengelola form state, mengirim request API, dan merender tampilan (loading, data, empty state, error state). |
+| **Rails API** | Memvalidasi input request, menerapkan aturan bisnis pencarian & validasi bentrok jadwal, menangani otorisasi, dan mengembalikan response JSON. |
+| **PostgreSQL** | Menyimpan data entitas ruang, pengguna, dan jadwal peminjaman serta menjaga integritas relasi (foreign key) dan transaksi data. |
+| **Dokumentasi (`docs/`)** | Menyimpan user story, acceptance criteria, diagram arsitektur, dan kontrak API untuk konsistensi tim. |
+
+---
+
+## 5. Struktur Repositori Git
+```text
+fullstack-capstone/
+├── frontend/        # Kode sumber aplikasi Next.js App Router
+├── backend/         # Kode sumber aplikasi Rails API-only
+├── docs/            # Dokumentasi proyek (User Story, Acceptance Criteria, API Contract)
+├── README.md        # Panduan proyek, instruksi jalankan app, & struktur folder
+└── .gitignore       # Pengaturan file lokal & kredensial rahasia (misal: .env) yang diabaikan Git
