@@ -1,0 +1,24 @@
+# TP5: Arsitektur Rails API-only
+
+Dokumen ini mencatat implementasi arsitektur Rails API-only dan versioned routes untuk entitas **Task** berdasarkan modul TP5.
+
+---
+
+## 1. Perbedaan Utama Rails API-only dan Full-stack
+* **ActionController::API**: Digunakan sebagai basis controller pada mode API-only. Modul yang tidak diperlukan seperti views, helpers, assets, sessions, dan flash cookies ditiadakan untuk mengoptimalkan performa dan fokus respons data JSON.
+* **Response Format**: Menggunakan format envelope stabil (`{ "data": ... }` dan `{ "error": ... }`) agar mudah dikonsumsi oleh client Next.js.
+
+---
+
+## 2. Struktur Routing dan Endpoint (`config/routes.rb`)
+Route dikelompokkan ke dalam versioned namespace `/api/v1`:
+
+```ruby
+Rails.application.routes.draw do
+  namespace :api do
+    namespace :v1 do
+      resources :tasks, only: %i[index show create update destroy]
+    end
+  end
+end
+
